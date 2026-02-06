@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>GEOG 458 Lab 4 – Tile Map (Seattle)</title>
+
+  <!-- Mapbox GL JS -->
+  <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
+  <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+
+  <style>
+    body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+    #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+
+    /* Overlay panel (title, description, layer switcher) */
+    .panel {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      max-width: 360px;
+      background: rgba(255,255,255,0.92);
+      border-radius: 12px;
+      padding: 12px 12px 10px 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+      line-height: 1.25;
+    }
+    .panel h1 {
+      font-size: 16px;
+      margin: 0 0 6px 0;
+    }
+    .panel p {
+      font-size: 12.5px;
+      margin: 0 0 10px 0;
+      color: #333;
+    }
+
+    .layers { display: grid; gap: 6px; font-size: 12.5px; }
+    .layers label { display: flex; align-items: center; gap: 8px; user-select: none; }
+
+    .meta {
+      margin-top: 10px;
+      font-size: 11.5px;
+      color: #555;
+    }
+    .meta a { color: #2b6cb0; text-decoration: none; }
+    .meta a:hover { text-decoration: underline; }
+  </style>
+</head>
+
+<body>
+  <div id="map"></div>
+
+  <!-- Title + description + layer switcher (meets rubric) -->
+  <div class="panel">
+    <h1>Lab 4: Map Design & Tile Generation (Seattle)</h1>
+    <p>
+      This map loads four raster tilesets exported from QGIS (organized as {z}/{x}/{y}.jpg) and displays them in
+      Mapbox GL JS. Use the checkboxes to toggle each tileset layer.
+    </p>
+
+    <div class="layers" id="layerControls"></div>
+
+    <div class="meta">
+      Zoom levels: <b>10–14</b><br/>
+      Projection: <b>Web Mercator (EPSG:3857)</b><br/>
+      Data/Tiles: exported from QGIS; displayed with Mapbox GL JS
+    </div>
+  </div>
+
+  <script>
+    // Your Mapbox key (not strictly needed for local raster tiles, but Mapbox GL expects a token variable)
+    mapboxgl.accessToken = "pk.eyJ1IjoiaGlldXRyYW4yIiwiYSI6ImNtaGVkdnNvNTBkNG0ybXExNjFobWFpMm8ifQ.csZ4K-7ctmQ5pw29u2U5Pw";
+
+    // Seattle center + rubric zoom range
+    const INITIAL_VIEW = {
+      center: [-122.3321, 47.6062], // Seattle
+      zoom: 10,
+      minZoom: 10,
+      maxZoom: 14
+    };
+
+    // Your tilesets (JPG)
+    const TILESETS = [
+      {
+        id: "BASEMAP",
+        name: "Tileset 1 – BASEMAP",
+        tiles: "assets/BASEMAP/{z}/{x}/{y}.jpg",
+        visible: true
+      },
+      {
+        id: "BASEMAP2",
+        name: "Tileset 2 – BASEMAP2",
+        tiles: "assets/BASEMAP2/{z}/{x}/{y}.jpg",
+        visible: false
+      },
+      {
+        id: "BASEMAP3",
+        name: "Tileset 3 – BASEMAP3",
+        tiles: "assets/BASEMAP3/{z}/{x}/{y}.jpg",
+        visible: false
+      },
+      {
+        id: "BASEMAP4",
+        name: "Tileset 4 – BASEMAP4",
+        tiles: "assets/BASEMAP4/{z}/{x}/{y}.jpg",
+        visible: false
+      }
+    ];
+
+    // Empty style — we’ll add raster sources/layers ourselves
+    const map = new mapboxgl.Map({
+      container: "map",
+      style: { version: 8, sources: {}, layers: [] },
+      center: INITIAL_VIEW.center,
+      zoom: INITIAL_VIEW.zoom,
+      minZoom: INITIAL_VIEW.minZoom,
+      maxZoom: INITIAL_VIEW.maxZoom
+    });
+
+    // Required UI elements: zoom control + scale bar + attribution
+    map.addControl(new mapboxgl.NavigationControl({ showCompass: true }), "top-right");
+    map.addControl(new mapboxgl.ScaleControl({ maxWidth: 140, unit: "imperial" }), "bottom-left");
+    map.addControl(new mapboxgl.AttributionControl({ compact: true }), "bottom-right");
+
+    map.on("load", () => {
+      // Add each raster tileset
+      TILESETS.forEach(ts => {
+        map.addSource(ts.id, {
+          type: "raster",
+          tiles: [ts.tiles],
+          tileSize: 256,
+          attribution: "Tiles exported from QGIS (Lab 4) and displayed with Mapbox GL JS"
+        });
+
+        map.addLayer({
+          id: ts.id,
+          type: "raster",
+          source: ts.id,
+          layout: { visibility: ts.visible ? "visible" : "none" }
+        });
+      });
+
+      // Layer switcher (rubric)
+      const controls = document.getElementById("layerControls");
+      TILESETS.forEach(ts => {
+        const label = document.createElement("label");
+
+        const cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.checked = ts.visible;
+
+        cb.addEventListener("change", (e) => {
+          map.setLayoutProperty(ts.id, "visibility", e.target.checked ? "visible" : "none");
+        });
+
+        const text = document.createElement("span");
+        text.textContent = ts.name;
+
+        label.appendChild(cb);
+        label.appendChild(text);
+        controls.appendChild(label);
+      });
+    });
+  </script>
+</body>
+</html>
