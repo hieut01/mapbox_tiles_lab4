@@ -1,6 +1,6 @@
 ## Web map link
 
-URL: https://github.com/hieut01/mapbox_tiles_lab4
+URL: https://hieut01.github.io/mapbox_tiles_lab4/
 
 ## What this project is
 
@@ -37,3 +37,4 @@ A themed map focused on Seattle’s waterline, plus landmark locations shown wit
 ## Short story for tile set 4
 
 Tile set 4 is meant to feel like a simple Seattle waterfront tour. The waterline gives the map its main shape and helps you stay oriented, then the camera icons mark places that feel worth stopping at. It is less about being a reference map and more about highlighting the parts of Seattle that connect back to the shoreline.
+
