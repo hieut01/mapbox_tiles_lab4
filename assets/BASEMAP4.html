@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>GEOG 458 Lab 4 – Tile Sets</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Mapbox GL JS -->
+  <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
+  <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+
+  <style>
+    html, body { height: 100%; width: 100%; margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+    #map { position: absolute; top: 0; bottom: 0; left: 0; right: 0; }
+
+    .panel {
+      position: absolute; top: 14px; left: 14px; z-index: 2;
+      width: 320px; max-width: calc(100% - 28px);
+      background: rgba(255,255,255,0.95);
+      border-radius: 12px;
+      padding: 12px 12px 10px 12px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.18);
+    }
+    .panel h1 { font-size: 16px; margin: 0 0 6px 0; line-height: 1.2; }
+    .panel p { font-size: 12.5px; margin: 0 0 10px 0; color: #333; }
+    .group-title { font-size: 12px; font-weight: 700; margin: 10px 0 6px 0; color: #222; }
+
+    .layers label {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 13px; padding: 6px 8px; border-radius: 10px; cursor: pointer;
+    }
+    .layers label:hover { background: rgba(0,0,0,0.05); }
+
+    .small { font-size: 11.5px; color: #444; margin-top: 8px; line-height: 1.3; }
+
+    .shots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 10px; }
+    .shots a { display: block; border-radius: 10px; overflow: hidden; border: 1px solid rgba(0,0,0,0.12); }
+    .shots img { width: 100%; height: 64px; object-fit: cover; display: block; }
+
+    .attribution { font-size: 11px; color: #555; margin-top: 8px; }
+  </style>
+</head>
+
+<body>
+  <div id="map"></div>
+
+  <div class="panel">
+    <h1>Lab 4: Map Design and Tile Generation</h1>
+    <p>
+      Four locally-hosted raster tile sets generated in QGIS and displayed with Mapbox GL JS.
+      Use the switcher below to view each tileset.
+    </p>
+
+    <div class="group-title">Layer switcher</div>
+    <div class="layers" id="layerSwitcher">
+      <label><input type="radio" name="tileset" value="tileset1" checked /> Tileset 1 – BASEMAP</label>
+      <label><input type="radio" name="tileset" value="tileset2" /> Tileset 2 – BASEMAP2</label>
+      <label><input type="radio" name="tileset" value="tileset3" /> Tileset 3 – BASEMAP3</label>
+      <label><input type="radio" name="tileset" value="tileset4" /> Tileset 4 – BASEMAP4</label>
+    </div>
+
+    <div class="group-title">Screenshots (optional)</div>
+    <div class="shots">
+      <!-- Optional: put screenshots (JPG) in /img -->
+      <a href="img/BASEMAP.jpg" target="_blank" rel="noopener"><img src="img/BASEMAP.jpg" alt="BASEMAP screenshot" /></a>
+      <a href="img/BASEMAP2.jpg" target="_blank" rel="noopener"><img src="img/BASEMAP2.jpg" alt="BASEMAP2 screenshot" /></a>
+      <a href="img/BASEMAP3.jpg" target="_blank" rel="noopener"><img src="img/BASEMAP3.jpg" alt="BASEMAP3 screenshot" /></a>
+      <a href="img/BASEMAP4.jpg" target="_blank" rel="noopener"><img src="img/BASEMAP4.jpg" alt="BASEMAP4 screenshot" /></a>
+    </div>
+
+    <div class="attribution">
+      Data/tiles: created by you in QGIS • Viewer: Mapbox GL JS
+    </div>
+
+    <div class="small">
+      If your map opens in the wrong place, change the <b>center</b> and <b>zoom</b> in the JS below.
+    </div>
+  </div>
+
+  <script>
+    mapboxgl.accessToken = 'pk.eyJ1IjoiaGlldXRyYW4yIiwiYSI6ImNtaGVkdnNvNTBkNG0ybXExNjFobWFpMm8ifQ.csZ4K-7ctmQ5pw29u2U5Pw';
+
+    const map = new mapboxgl.Map({
+      container: 'map',
+      style: {
+        "version": 8,
+        "sources": {},
+        "layers": [
+          { "id": "background", "type": "background", "paint": { "background-color": "#f2f2f2" } }
+        ]
+      },
+      center: [-122.335, 47.608], // change if needed
+      zoom: 10                 // change if needed
+    });
+
+    map.addControl(new mapboxgl.NavigationControl(), 'top-right');
+    map.addControl(new mapboxgl.FullscreenControl(), 'top-right');
+    map.addControl(new mapboxgl.ScaleControl({ maxWidth: 120, unit: 'imperial' }));
+
+    function addRasterTileset(sourceId, layerId, folderName) {
+      map.addSource(sourceId, {
+        type: 'raster',
+        tiles: [`assets/${folderName}/{z}/{x}/{y}.jpg`],  // <-- JPG tiles here
+        tileSize: 256,
+        attribution: 'Raster tiles generated in QGIS'
+      });
+
+      map.addLayer({
+        id: layerId,
+        type: 'raster',
+        source: sourceId,
+        layout: { visibility: 'none' }
+      });
+    }
+
+    function setOnlyVisible(layerIdToShow) {
+      const all = ['tileset1-layer', 'tileset2-layer', 'tileset3-layer', 'tileset4-layer'];
+      all.forEach(id => {
+        if (map.getLayer(id)) {
+          map.setLayoutProperty(id, 'visibility', (id === layerIdToShow) ? 'visible' : 'none');
+        }
+      });
+    }
+
+    map.on('load', () => {
+      addRasterTileset('tileset1-src', 'tileset1-layer', 'BASEMAP');
+      addRasterTileset('tileset2-src', 'tileset2-layer', 'BASEMAP2');
+      addRasterTileset('tileset3-src', 'tileset3-layer', 'BASEMAP3');
+      addRasterTileset('tileset4-src', 'tileset4-layer', 'BASEMAP4');
+
+      setOnlyVisible('tileset1-layer');
+
+      document.getElementById('layerSwitcher').addEventListener('change', (e) => {
+        if (!e.target || e.target.name !== 'tileset') return;
+
+        const v = e.target.value;
+        if (v === 'tileset1') setOnlyVisible('tileset1-layer');
+        if (v === 'tileset2') setOnlyVisible('tileset2-layer');
+        if (v === 'tileset3') setOnlyVisible('tileset3-layer');
+        if (v === 'tileset4') setOnlyVisible('tileset4-layer');
+      });
+    });
+  </script>
+</body>
+</html>
